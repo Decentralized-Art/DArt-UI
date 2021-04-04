@@ -1,25 +1,25 @@
-import logo from './logo.svg';
-import './App.css';
+import { Web3Provider } from "@ethersproject/providers";
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { Web3ReactProvider } from "@web3-react/core";
+import Home from "./components/Home";
+import Canvas from "./components/canvas";
+import "./App.css";
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Web3ReactProvider
+      getLibrary={(provider, connector) => new Web3Provider(provider)}
+    >
+      <Router>
+        <Switch>
+      <Route exact path="/" component={Home}/>
+      <Route exact path="/canvas" component={Canvas}/>
+      <Canvas/>
+      </Switch>
+      </Router>
+
+    </Web3ReactProvider>
   );
-}
+};
 
 export default App;
