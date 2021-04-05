@@ -5,10 +5,10 @@ import { AppBar, Grid, Typography, Button } from "@material-ui/core";
 
 const styles = {
     appbar: {
-      background: "transparent",
+      background: "blue",
       boxShadow: "none",
       backdropFilter: "blur(15px)",
-      marginTop: 10,
+      marginTop: 0,
     },
   };
 
@@ -22,7 +22,7 @@ const Canvas_titlebar = () => {
               DArt
             </Typography>
           </Grid>
-          <Button style={{backgroundColor:"black",color:"white"}}>Create Merge Request</Button>
+          
         </Grid>
       </AppBar>
     );
