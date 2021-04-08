@@ -3,6 +3,13 @@ import CanvasDraw from "react-canvas-draw";
 import {CirclePicker} from "react-color";
 import ipfs from "./ipfs";
 import { useScreenshot, createFileName} from 'use-react-screenshot'
+import { ThreeIdConnect, EthereumAuthProvider } from '3id-connect';
+
+const Ceramic = require("@ceramicnetwork/http-client").default;
+// const { Ed25519Provider } = require("key-did-provider-ed25519");
+const threeIdConnect = new ThreeIdConnect();
+
+const CERAMIC_URL = "https://ceramic-clay.3boxlabs.com";
 
 var fs = require("fs");
 
@@ -52,30 +59,14 @@ const Drawing =(props) => {
     const download = async(image, { name = "new_img", extension = "png" } = {}) => {
         
         console.log(image);
-        // let img_name = createFileName(extension,name);
-        // let img = new Buffer(image,"base64");
-        // var contents = fs.write("new_img.png",img,'utf8');
-        // const a = document.createElement("a");
-        // a.href = image;
-        // a.download = createFileName(extension, name);
-        // a.click();
-        // const {cid} = await ipfs.add(img);
-        
-        // await fetch("http://127.0.0.1:5000/push_change",{
-        //       method: "GET",
-        //       mode:"cors",
-        //       headers: {
-        //         'Accept': 'application/json',
-        //         'Content-Type': 'application/json'
-        //       },
-        //     }).then(data => data.json())
-        //     .then(data => {
-        //       setUserHash(data["hash"]);
-        //       console.log("new_hash:",data["hash"]);
-        //     }).catch(error => console.log(error));
-        
-        // console.log("userHash:",cid.string);
-        // setUserHash(cid.string);
+        const addresses = await window.ethereum.enable();
+        const authProvider = new EthereumAuthProvider(window.ethereum, addresses[0]);
+        await threeIdConnect.connect(authProvider);
+        const didProvider = await threeIdConnect.getDidProvider();
+        const ceramic = new Ceramic(CERAMIC_URL);
+        await ceramic.setDIDProvider(didProvider);
+        const exis_doc = await ceramic.loadDocument(props.drawingProps.location.canvasProps.hash);
+        var res = exis_doc.content;
         await fetch("http://127.0.0.1:5000/concat",{
               method: "POST",
               mode:"cors",
@@ -84,15 +75,16 @@ const Drawing =(props) => {
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                "orig_hash": props.drawingProps.location.canvasProps.hash,
+                "orig_hash": res["img"],
                 "new_img": image,
                 "start": [0,0],
                 "end": [height,width]
               })
             }).then(data => data.json())
-            .then(data => {
+            .then(async data => {
               setFinalHash(data["hash"]);
               console.log(data["hash"]);
+
             }).catch(error => console.log(error))
         
       };

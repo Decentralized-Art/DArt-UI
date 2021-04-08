@@ -11,6 +11,14 @@ import { MAIN_CONTRACT_ABI } from "../Abi/Main";
 import TextField from '@material-ui/core/TextField';
 import {Button, Dialog,DialogContent,DialogTitle} from "@material-ui/core";
 
+import { ThreeIdConnect, EthereumAuthProvider } from '3id-connect';
+
+const Ceramic = require("@ceramicnetwork/http-client").default;
+// const { Ed25519Provider } = require("key-did-provider-ed25519");
+const threeIdConnect = new ThreeIdConnect();
+
+const CERAMIC_URL = "https://ceramic-clay.3boxlabs.com";
+
 const Home = () => {
   const { account, library } = useWeb3React();
   const [isOpenOwn, setIsOpenOwn] = useState(false);
@@ -18,9 +26,19 @@ const Home = () => {
   const [isRegistered, setIsRegistered] = useState(null);
   const [hash,setHash] = useState(false);
   const [userHash,setUserHash] = useState(false);
-  const canvWidth = 500;
-  const canvHeight = 500;
+  const [user1,setUser1] = useState("");
+  const [user1From,setUser1From] = useState("");
+  const [user1To,setUser1To] = useState("");
+  const [user2,setUser2] = useState("");
+  const [user2From,setUser2From] = useState("");
+  const [user2To,setUser2To] = useState("");
+  const [valid,setValid] = useState(false);
+  const [canvWidth,setWidth] = useState(500);
+  const [canvHeight,setHeight] = useState(500);
+  const ceramic = null;
   var mainContract = null;
+
+
 
   useEffect(() => {
     const operation = async () => {
@@ -69,15 +87,15 @@ const Home = () => {
             color: "white",
           }} onClick={() => setIsOpenOwn(true)} size="large" variant="outlined"> <h3>Set up Canvas now!</h3></Button>
           <Dialog fullWidth={true} open={isOpenOwn} onClose={() => setIsOpenOwn(false)}>
-          <DialogTitle>Add wallet addresses of upto 3 collaborators<br></br>(Canvas Size: 2000x1000)</DialogTitle>
+          <DialogTitle>Add wallet addresses of upto 2 collaborators<br></br>(Canvas Size: 2000x1000)</DialogTitle>
           <DialogContent>
           <form noValidate autoComplete="off">
-          <input type="text" name="Address1" placeholder="Address1" />
-          <input type="text" name="From" placeholder="From"/>
-          <input type="text" name="To" placeholder="To"/><br></br>
-          <input type="text" name="Address2" placeholder="Address2" />
-          <input type="text" name="From" placeholder="From"/>
-          <input type="text" name="To" placeholder="To"/><br></br>
+          <input type="text" name="Address1" placeholder="Address1" onChange={event => setUser1(event.target.value)} />
+          <input type="text" name="From" placeholder="From" onChange={event => setUser1From(event.target.value)}/>
+          <input type="text" name="To" placeholder="To" onChange={event => setUser1To(event.target.value)}/><br></br>
+          <input type="text" name="Address2" placeholder="Address2" onChange={event => setUser2(event.target.value)} />
+          <input type="text" name="From" placeholder="From" onChange={event => setUser2From(event.target.value)}/>
+          <input type="text" name="To" placeholder="To" onChange={event => setUser2To(event.target.value)}/><br></br>
         </form>
       
         <Button
@@ -98,13 +116,102 @@ const Home = () => {
                 'Content-Type': 'application/json'
               },
             }).then(data => data.json())
-            .then(data => {
-              setHash(data["hash"]);
+            .then(async data => {
+              const addresses = await window.ethereum.enable();
+              console.log(addresses);
+              const authProvider = new EthereumAuthProvider(window.ethereum, addresses[0]);
+              await threeIdConnect.connect(authProvider);
+              const didProvider = await threeIdConnect.getDidProvider();
+              
+              // Connect to the local Ceramic node
+              const ceramic = new Ceramic(CERAMIC_URL);
+              // Authenticate the Ceramic instance with the provider
+            
+              await ceramic.setDIDProvider(didProvider);
+            
+              // ceramic.close();
+              console.log("Ceramic:",ceramic)
+              const jsonSchema = {
+                "type": "object",
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "required": [
+                  "hash",
+                  "address1",
+                  "address2",
+                  "add1Start",
+                  "add1End",
+                  "add2Start",
+                  "add2End"
+                ],
+                "properties": {
+                  "hash": {
+                    "type": "string"
+                  },
+                  "address1": {
+                    "type": "string"
+                  },
+                  "address2":{
+                    "type": "String"
+                  },
+                  "add1Start":{
+                    "type" : "Array"
+                  },
+                  "add1End":{
+                    "type" : "Array"
+                  },
+                  "add2Start":{
+                    "type" : "Array"
+                  },
+                  "add2End":{
+                    "type" : "Array"
+                  }
+                },
+                "additionalProperties": false
+              };
+              console.log(ceramic.did.id);
+              console.log(user1,user2,user1From,user1To,user2From,user2To);
+              const schema_doc = await ceramic.createDocument('tile', { content: jsonSchema })
+              console.log(schema_doc);
+              const new_doc = await ceramic.createDocument('tile',{
+                metadata: 
+                  { controllers: [ceramic.did.id],
+                  family: "doc family"},
+                content: {
+                  title: "Init",
+                  img: data["hash"],
+                  address1: user1,
+                  address2: user2,
+                  add1Start: user1From,
+                  add1End: user1To,
+                  add2Start: user2From,
+                  add2End: user2To
+                }
+              });
+              await ceramic.pin.add(new_doc.id.toString());
+              console.log("id:",new_doc.id.toString());
+              setHash(new_doc.id.toString());
               console.log(data["hash"]);
             }).catch(error => console.log(error))
           }}
            size="large" variant="outlined"> <h3>Submit</h3></Button>
-          {hash !== false && <h4>Your IPFS hash: {hash}</h4>}
+          {hash !== false && <div><h4>Share this has with your friends: {hash}</h4> <Link to={{
+              pathname:"http://localhost:8080/ipfs/"+hash,
+              canvasProps:{
+                hash: userHash,
+                height: {canvHeight},
+                width: {canvWidth}
+              }}}>
+          <Button
+            style={{
+              left: '30%',
+              height: '40px',
+              backgroundColor: "black",
+              color: "white",
+            }} onClick={async () => {
+                          
+            }}
+            size="large" variant="outlined"> <h4>Go to Image</h4></Button>
+            </Link></div>}
           </DialogContent>
           </Dialog>
           <Button
@@ -116,13 +223,47 @@ const Home = () => {
             color: "white",
           }} onClick={() => setIsOpenUser(true)} size="large" variant="outlined"> <h3>Join your team</h3></Button>
           <Dialog open={isOpenUser} onClose={() => setIsOpenUser(false)}>
-          <DialogTitle>Add image hash:</DialogTitle>
+          <DialogTitle>Add Ceramic hash:</DialogTitle>
           <DialogContent>
           <form noValidate autoComplete="off">
-            Image hash:<TextField onChange={event => setUserHash(event.target.value)} id="outlined-basic" label="Hash" variant="outlined" size="small"/>
+            Ceramic hash:<TextField onChange={async event => {
+              setUserHash(event.target.value);
+              var uhash = event.target.value;
+              const addresses = await window.ethereum.enable();
+              const authProvider = new EthereumAuthProvider(window.ethereum, addresses[0]);
+              await threeIdConnect.connect(authProvider);
+              const didProvider = await threeIdConnect.getDidProvider();
+              
+              const ceramic = new Ceramic(CERAMIC_URL);
+            
+              await ceramic.setDIDProvider(didProvider);
+            
+              const exis_doc = await ceramic.loadDocument(uhash);
+              var res = exis_doc.content;
+              console.log(res["address1"]);
+              console.log(addresses[0]);
+              let end1 = res["add1End"].split(",");
+              let start1 = res["add1Start"].split(",");
+              let end2 = res["add2End"].split(",");
+              let start2 = res["add2Start"].split(",");
+              let ht = parseInt(end1[1])-parseInt(start1[1]);
+              let wt = parseInt(end1[0])-parseInt(start1[0]);
+              if (res["address1"].toLowerCase()===addresses[0]){
+                  setHeight(ht);
+                  setWidth(wt);
+                  setValid(true);
+                  console.log("canvas:",canvWidth,canvHeight);
+              }else if (res["address2"].toLowerCase()===addresses[0]){
+                  setHeight(ht);
+                  setWidth(wt);
+                  setValid(true);
+              }else{
+                console.log("Not authenticated");
+              }
+              }} id="outlined-basic" label="Hash" variant="outlined" size="small"/>
           </form>
           <br></br>
-          <Link to={{
+          {valid !== false && <Link to={{
               pathname:"/canvas",
               canvasProps:{
                 hash: userHash,
@@ -139,7 +280,7 @@ const Home = () => {
                           
             }}
             size="large" variant="outlined"> <h4>Go to Drawing</h4></Button>
-            </Link>
+            </Link>}
           </DialogContent>
           </Dialog>
             
