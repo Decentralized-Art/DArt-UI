@@ -2,6 +2,7 @@ import React, {useState, useEffect} from "react";
 import { Link } from "react-router-dom";
 import Titlebar from "./Titlebar";
 import { ethers } from "ethers";
+import ipfs from "./ipfs";
 import { Typography } from "@material-ui/core";
 import { useWeb3React } from "@web3-react/core";
 import backgroundH from "../assets/source.gif";
@@ -15,7 +16,10 @@ const Home = () => {
   const [isOpenOwn, setIsOpenOwn] = useState(false);
   const [isOpenUser, setIsOpenUser] = useState(false);
   const [isRegistered, setIsRegistered] = useState(null);
-  const [needsRefresh, setNeedsRefresh] = useState(false);
+  const [hash,setHash] = useState(false);
+  const [userHash,setUserHash] = useState(false);
+  const canvWidth = 500;
+  const canvHeight = 500;
   var mainContract = null;
 
   useEffect(() => {
@@ -36,7 +40,7 @@ const Home = () => {
       }
       setIsRegistered(registrationStatus);
     }
-  },[account,isRegistered,library,needsRefresh]);
+  },[account,isRegistered,library]);
     return (
         <>
           <Titlebar />
@@ -65,7 +69,7 @@ const Home = () => {
             color: "white",
           }} onClick={() => setIsOpenOwn(true)} size="large" variant="outlined"> <h3>Set up Canvas now!</h3></Button>
           <Dialog fullWidth={true} open={isOpenOwn} onClose={() => setIsOpenOwn(false)}>
-          <DialogTitle>Add wallet addresses of upto 3 collaborators(Canvas Size: 2000x1000)</DialogTitle>
+          <DialogTitle>Add wallet addresses of upto 3 collaborators<br></br>(Canvas Size: 2000x1000)</DialogTitle>
           <DialogContent>
           <form noValidate autoComplete="off">
           <input type="text" name="Address1" placeholder="Address1" />
@@ -82,14 +86,25 @@ const Home = () => {
             backgroundColor: "black",
             color: "white",
           }} onClick={async () => {
-            const tx = await mainContract.registerUser(
+            // const tx = await mainContract.registerUser(
               
-            );
-            var buffer = new Uint8ClampedArray(2000 * 1000 * 4);
-            
+            // );
+            console.log("Submit clicked!");
+            fetch("http://127.0.0.1:5000/init",{
+              method: "GET",
+              mode:"cors",
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            }).then(data => data.json())
+            .then(data => {
+              setHash(data["hash"]);
+              console.log(data["hash"]);
+            }).catch(error => console.log(error))
           }}
            size="large" variant="outlined"> <h3>Submit</h3></Button>
-          
+          {hash !== false && <h4>Your IPFS hash: {hash}</h4>}
           </DialogContent>
           </Dialog>
           <Button
@@ -104,10 +119,16 @@ const Home = () => {
           <DialogTitle>Add image hash:</DialogTitle>
           <DialogContent>
           <form noValidate autoComplete="off">
-            Image hash:<TextField id="outlined-basic" label="Hash" variant="outlined" size="small"/>
+            Image hash:<TextField onChange={event => setUserHash(event.target.value)} id="outlined-basic" label="Hash" variant="outlined" size="small"/>
           </form>
-      
-          <Link to="/canvas">
+          <br></br>
+          <Link to={{
+              pathname:"/canvas",
+              canvasProps:{
+                hash: userHash,
+                height: {canvHeight},
+                width: {canvWidth}
+              }}}>
           <Button
             style={{
               left: '30%',

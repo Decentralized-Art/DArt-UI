@@ -13,6 +13,8 @@
     "ethers": "^5.1.0",
     "html2canvas": "*",
     "ipfs-api": "^26.1.2",
+    "ipfs-http-client": "^49.0.4",
+    "it-to-buffer": "^2.0.0",
     "react": "^16.14.0",
     "react-canvas-draw": "^1.1.1",
     "react-color": "^2.19.3",
@@ -32,6 +34,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "http://localhost:5000",
   "eslintConfig": {
     "extends": [
       "react-app",

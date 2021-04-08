@@ -12,7 +12,7 @@ const styles = {
     },
   };
 
-const Canvas_titlebar = () => {
+const CanvasTitlebar = (props) => {
     const { account, activate } = useWeb3React();
     return (
       <AppBar position="static" style={styles.appbar}>
@@ -22,11 +22,24 @@ const Canvas_titlebar = () => {
               DArt
             </Typography>
           </Grid>
+          <Grid
+            container
+            item
+            xs={12}
+            sm={6}
+            spacing={2}
+            alignItems="center"
+            justify="flex-end"
+          >
+              <Grid item>
+                <h3>{props.titleProps.location.canvasProps.hash}</h3>
+              </Grid>
+          </Grid>
           
         </Grid>
       </AppBar>
     );
   };
   
-  export default Canvas_titlebar;
+  export default CanvasTitlebar;
   
