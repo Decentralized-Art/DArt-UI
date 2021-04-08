@@ -84,6 +84,14 @@ const Drawing =(props) => {
             .then(async data => {
               setFinalHash(data["hash"]);
               console.log(data["hash"]);
+              await exis_doc.change({ content: { title: "New",
+              img: data["hash"],
+              address1: res["address1"],
+              address2: res["address2"],
+              add1Start: res["add1Start"],
+              add1End: res["add1End"],
+              add2Start: res["add2Start"],
+              add2End: res["add2End"] }})
 
             }).catch(error => console.log(error))
         

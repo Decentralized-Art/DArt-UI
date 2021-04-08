@@ -24,6 +24,7 @@ const Home = () => {
   const [isOpenOwn, setIsOpenOwn] = useState(false);
   const [isOpenUser, setIsOpenUser] = useState(false);
   const [isRegistered, setIsRegistered] = useState(null);
+  const [isImg, setImg] = useState(false);
   const [hash,setHash] = useState(false);
   const [userHash,setUserHash] = useState(false);
   const [user1,setUser1] = useState("");
@@ -184,7 +185,7 @@ const Home = () => {
                   add1Start: user1From,
                   add1End: user1To,
                   add2Start: user2From,
-                  add2End: user2To
+                  add2End: user2To 
                 }
               });
               await ceramic.pin.add(new_doc.id.toString());
@@ -192,26 +193,9 @@ const Home = () => {
               setHash(new_doc.id.toString());
               console.log(data["hash"]);
             }).catch(error => console.log(error))
-          }}
+          }} 
            size="large" variant="outlined"> <h3>Submit</h3></Button>
-          {hash !== false && <div><h4>Share this has with your friends: {hash}</h4> <Link to={{
-              pathname:"http://localhost:8080/ipfs/"+hash,
-              canvasProps:{
-                hash: userHash,
-                height: {canvHeight},
-                width: {canvWidth}
-              }}}>
-          <Button
-            style={{
-              left: '30%',
-              height: '40px',
-              backgroundColor: "black",
-              color: "white",
-            }} onClick={async () => {
-                          
-            }}
-            size="large" variant="outlined"> <h4>Go to Image</h4></Button>
-            </Link></div>}
+          {hash !== false && <div><h4>Share this hash with your friends: {hash}</h4> </div>}
           </DialogContent>
           </Dialog>
           <Button
@@ -221,7 +205,16 @@ const Home = () => {
             top: '30%',
             backgroundColor: "black",
             color: "white",
-          }} onClick={() => setIsOpenUser(true)} size="large" variant="outlined"> <h3>Join your team</h3></Button>
+          }} onClick={() => setIsOpenUser(true)} size="large" variant="outlined" onClose={() => setIsOpenUser(false)}> <h3>Join your team</h3></Button>
+          <Button
+          style={{
+            position: "absolute", //kjzl6cwe1jw148drw5xsg8wewqpsznsx0am4btu67rdvfxek67avfqoccmdgdhq
+            left: '40%',
+            top: '50%',
+            backgroundColor: "black",
+            color: "white",
+          }} onClick={() => setImg(true)} size="large" variant="outlined" onClose={() => setImg(false)}> <h3>View Image</h3></Button>
+
           <Dialog open={isOpenUser} onClose={() => setIsOpenUser(false)}>
           <DialogTitle>Add Ceramic hash:</DialogTitle>
           <DialogContent>
@@ -281,6 +274,44 @@ const Home = () => {
             }}
             size="large" variant="outlined"> <h4>Go to Drawing</h4></Button>
             </Link>}
+          </DialogContent>
+          </Dialog>
+
+          <Dialog open={isImg} onClose={() => setImg(false)}>
+          <DialogTitle>Add Ceramic hash:</DialogTitle>
+          <DialogContent>
+          <form noValidate autoComplete="off">
+            Ceramic hash:<TextField onChange={async event => {
+              setUserHash(event.target.value);
+              var uhash = event.target.value;
+              const addresses = await window.ethereum.enable();
+              const authProvider = new EthereumAuthProvider(window.ethereum, addresses[0]);
+              await threeIdConnect.connect(authProvider);
+              const didProvider = await threeIdConnect.getDidProvider();
+              
+              const ceramic = new Ceramic(CERAMIC_URL);
+            
+              await ceramic.setDIDProvider(didProvider);
+            
+              const exis_doc = await ceramic.loadDocument(uhash);
+              var res = exis_doc.content;
+              console.log(res["img"]);
+              setUserHash(res["img"]);
+              
+              }} id="outlined-basic" label="Hash" variant="outlined" size="small"/>
+          </form>
+          <br></br>
+          <Link to={{
+              pathname:"http://localhost:8080/ipfs/"+userHash,
+              }} target="_blank">
+          <Button
+            style={{
+              left: '30%',
+              height: '40px',
+              backgroundColor: "black",
+              color: "white",
+            }} size="large" variant="outlined"> <h4>Go to Image</h4></Button>
+            </Link>
           </DialogContent>
           </Dialog>
             
