@@ -21,28 +21,6 @@ const styles = {
             top:"80%"}
   };
 
-// class Drawing extends Component {
-//     state = {
-//         brushColor: "pink",
-//         width: 1700,
-//         height: 600
-//     };
-//     handleChange = (color,event) => {
-//         this.setState({brushColor: color.hex});
-//     };
-//   render(){
-//   return (
-//     <div>
-//     <CanvasDraw id="canvas" brushColor={this.state.brushColor} canvasWidth={this.state.width} canvasHeight={this.state.height}/>
-//     <Button style={styles.button} onClick={async () => {
-        
-//     }}><h2>Create Merge Request</h2></Button>
-//     <CirclePicker color={this.state.brushColor} onChangeComplete={this.handleChange}/>;
-//     </div>
-//   );
-// }
-// }
-
 const Drawing =(props) => {
 
     const [Color,setColor] = useState(false);
@@ -50,6 +28,9 @@ const Drawing =(props) => {
     // console.log(props);
     const width = props.drawingProps.location.canvasProps.width.canvWidth;
     const height = props.drawingProps.location.canvasProps.height.canvHeight;
+    const start = props.drawingProps.location.canvasProps.start.start;
+    const end = props.drawingProps.location.canvasProps.end.end;
+
     const [userHash,setUserHash] = useState(false);
     const [finalHash, setFinalHash] = useState(false);
     const [image, takeScreenshot] = useScreenshot({
@@ -77,21 +58,41 @@ const Drawing =(props) => {
               body: JSON.stringify({
                 "orig_hash": res["img"],
                 "new_img": image,
-                "start": [0,0],
-                "end": [height,width]
+                "start": [parseInt(start[0]),parseInt(start[1])],
+                "end": [parseInt(end[0]),parseInt(end[1])]
               })
             }).then(data => data.json())
             .then(async data => {
-              setFinalHash(data["hash"]);
-              console.log(data["hash"]);
+              let commitList = res["commits"];
+              let newCommit = {
+                commit: data["hash"],
+                by: addresses[0]
+              }
+              commitList.push(newCommit);
               await exis_doc.change({ content: { title: "New",
-              img: data["hash"],
+              img: res["img"],
+              owner: res["owner"],
               address1: res["address1"],
               address2: res["address2"],
               add1Start: res["add1Start"],
               add1End: res["add1End"],
               add2Start: res["add2Start"],
-              add2End: res["add2End"] }})
+              add2End: res["add2End"] ,
+              commits: commitList
+              }})
+              alert("Request successfully submitted!! Please wait for the owner's approval.");
+
+              // setFinalHash(data["hash"]);
+              // console.log(data["hash"]);
+              // await exis_doc.change({ content: { title: "New",
+              // img: data["hash"],
+              // owner: res["owner"],
+              // address1: res["address1"],
+              // address2: res["address2"],
+              // add1Start: res["add1Start"],
+              // add1End: res["add1End"],
+              // add2Start: res["add2Start"],
+              // add2End: res["add2End"] }})
 
             }).catch(error => console.log(error))
         

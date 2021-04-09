@@ -36,6 +36,11 @@ const Home = () => {
   const [valid,setValid] = useState(false);
   const [canvWidth,setWidth] = useState(500);
   const [canvHeight,setHeight] = useState(500);
+  const [isOwn,setIsOwn] = useState(null);
+  const [validOwn, setValidOwn] = useState(false);
+  const [editOwn,setEditOwn] = useState(null);
+  const [start,setStart] = useState([0,0]);
+  const [end,setEnd] = useState([2000,1000]);
   const ceramic = null;
   var mainContract = null;
 
@@ -169,7 +174,7 @@ const Home = () => {
                 },
                 "additionalProperties": false
               };
-              console.log(ceramic.did.id);
+              console.log(ceramic.did.id); //0x07E032C79B7cb48dF619755426b13199FD5f8770 0xdbCBD17e4585CbC9A9d4e8a54951B428290B4b50
               console.log(user1,user2,user1From,user1To,user2From,user2To);
               const schema_doc = await ceramic.createDocument('tile', { content: jsonSchema })
               console.log(schema_doc);
@@ -180,12 +185,14 @@ const Home = () => {
                 content: {
                   title: "Init",
                   img: data["hash"],
+                  owner: addresses[0],
                   address1: user1,
                   address2: user2,
                   add1Start: user1From,
                   add1End: user1To,
                   add2Start: user2From,
-                  add2End: user2To 
+                  add2End: user2To,
+                  commits: []
                 }
               });
               await ceramic.pin.add(new_doc.id.toString());
@@ -214,6 +221,15 @@ const Home = () => {
             backgroundColor: "black",
             color: "white",
           }} onClick={() => setImg(true)} size="large" variant="outlined" onClose={() => setImg(false)}> <h3>View Image</h3></Button>
+
+          <Button
+            style={{
+            position: "absolute", 
+            left: '30%',
+            top: '70%',
+            backgroundColor: "black",
+            color: "white",
+          }} onClick={() => setIsOwn(true)} size="large" variant="outlined" onClose={() => setIsOwn(false)}> <h3>Approve changes(Owners only)</h3></Button>
 
           <Dialog open={isOpenUser} onClose={() => setIsOpenUser(false)}>
           <DialogTitle>Add Ceramic hash:</DialogTitle>
@@ -244,13 +260,22 @@ const Home = () => {
               if (res["address1"].toLowerCase()===addresses[0]){
                   setHeight(ht);
                   setWidth(wt);
+                  setStart(start1);
+                  setEnd(end1);
                   setValid(true);
                   console.log("canvas:",canvWidth,canvHeight);
               }else if (res["address2"].toLowerCase()===addresses[0]){
                   setHeight(ht);
                   setWidth(wt);
+                  setStart(start2);
+                  setEnd(end2);
                   setValid(true);
-              }else{
+              }else if (res["owner"].toLowerCase()===addresses[0]){
+                  setHeight(600);
+                  setWidth(1700);
+                  setValid(true);
+              }
+              else{
                 console.log("Not authenticated");
               }
               }} id="outlined-basic" label="Hash" variant="outlined" size="small"/>
@@ -260,6 +285,8 @@ const Home = () => {
               pathname:"/canvas",
               canvasProps:{
                 hash: userHash,
+                start: {start},
+                end: {end},
                 height: {canvHeight},
                 width: {canvWidth}
               }}}>
@@ -269,10 +296,7 @@ const Home = () => {
               height: '40px',
               backgroundColor: "black",
               color: "white",
-            }} onClick={async () => {
-                          
-            }}
-            size="large" variant="outlined"> <h4>Go to Drawing</h4></Button>
+            }} size="large" variant="outlined"> <h4>Go to Drawing</h4></Button>
             </Link>}
           </DialogContent>
           </Dialog>
@@ -312,6 +336,85 @@ const Home = () => {
               color: "white",
             }} size="large" variant="outlined"> <h4>Go to Image</h4></Button>
             </Link>
+          </DialogContent>
+          </Dialog>
+
+          <Dialog open={isOwn} onClose={() => setIsOwn(false)}>
+          <DialogTitle>Add Ceramic hash:</DialogTitle>
+          <DialogContent>
+          <form noValidate autoComplete="off">
+            Ceramic hash:<TextField onChange={async event => {
+              setUserHash(event.target.value);
+              var uhash = event.target.value;
+              const addresses = await window.ethereum.enable();
+              const authProvider = new EthereumAuthProvider(window.ethereum, addresses[0]);
+              await threeIdConnect.connect(authProvider);
+              const didProvider = await threeIdConnect.getDidProvider();
+              
+              const ceramic = new Ceramic(CERAMIC_URL);
+            
+              await ceramic.setDIDProvider(didProvider);
+            
+              const exis_doc = await ceramic.loadDocument(uhash);
+              setEditOwn(uhash);
+              var res = exis_doc.content;
+              if (res["owner"]===addresses[0])
+              {
+                setValidOwn(res["commits"]);
+              }
+              console.log(res["commits"]);
+              }} id="outlined-basic" label="Hash" variant="outlined" size="small"/>
+          </form>
+          <br></br>
+          {validOwn !== false && <div>
+            <h4>By: {validOwn[0]["by"]}</h4>
+            <Link to={{
+              pathname:"http://localhost:8080/ipfs/"+validOwn[0]["commit"],
+              }} target="_blank">
+          <Button
+            style={{
+              left: '20%',
+              height: '40px',
+              backgroundColor: "black",
+              color: "white",
+            }} size="large" variant="outlined"> <h4>Go to Image</h4></Button>
+            </Link>
+            <Button
+            style={{
+              left: '30%',
+              top: '80%',
+              height: '40px',
+              backgroundColor: "black",
+              color: "white",
+            }} onClick={async () => {
+              const addresses = await window.ethereum.enable();
+              const authProvider = new EthereumAuthProvider(window.ethereum, addresses[0]);
+              await threeIdConnect.connect(authProvider);
+              const didProvider = await threeIdConnect.getDidProvider();
+              
+              const ceramic = new Ceramic(CERAMIC_URL);
+            
+              await ceramic.setDIDProvider(didProvider);
+            
+              const exis_doc = await ceramic.loadDocument(editOwn);
+              var res = exis_doc.content; 
+
+              await exis_doc.change({ content: { title: "New",
+              img: validOwn[0]["commit"],
+              owner: res["owner"],
+              address1: res["address1"],
+              address2: res["address2"],
+              add1Start: res["add1Start"],
+              add1End: res["add1End"],
+              add2Start: res["add2Start"],
+              add2End: res["add2End"],
+              commits: [] }})
+              setValidOwn(false);
+              alert("Successfully Merged!! View Image using Hash to see updated Image");
+  
+            }} size="large" variant="outlined"> <h4>Approve</h4></Button>
+          </div>}
+          
           </DialogContent>
           </Dialog>
             
