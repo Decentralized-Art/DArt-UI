@@ -3,6 +3,9 @@
  <h3 align="center"> Collaborate with your friends in building Decentralized artwork! </h3>
  <p align="center"> A decentralized version-controlled canvas for you and your friends to build the next billion-dollar NFT art piece.</p>
  
+ ***Note**: This repository contains the source code for the UI of the project. The source code for the whole project can be found at:
+ https://github.com/Decentralized-Art*
+ 
 ![intro.png](https://i.postimg.cc/6p4ZXQH5/intro.png)
 
 # Walkthrough Demo:
@@ -38,7 +41,7 @@ In DArt, each team is allocated a canvas of size 2000* 1000. Various portions of
 **Create a MultiSig wallet for your team**
 
 Generate a secure unique MultiSig wallet address on Ethereum for you and your team for each art piece. *Requires gas fees*
-
+*
 <img src="https://i.postimg.cc/G2bFjCbP/multisig.gif" height="500" width="2000">
 
 ## Step6:
@@ -56,6 +59,24 @@ Currently DArt ERC-721 tokens for your Decentralized Art piece are available on 
  - **Version control**: <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1bylakjJCguNV77wxjeG3TA_T1ntH0fqMFN8_CcvbAc5Wy4syAR56rxXc3sbYwNfXFg&usqp=CAU" height="25" width="100">
  - **Login**: <img src="https://i.postimg.cc/CMGdN5dV/metamask.png" height="30" width="150">
  - **Deployment (Mumbai testnet)**: <img src="https://i.postimg.cc/HkqVzy0d/matic2.png" height="30" width="110">
+
+## Run locally:
+ 
+  - Clone the UI repository:
+    `git clone https://github.com/Decentralized-Art/DArt-UI`
+  - Clone the server repository:
+    `git clone https://github.com/Decentralized-Art/DArt-stitchMe`
+  - Install dependencies:
+   `yarn install`
+  - Run the React app:
+   `npm start`
+  - Spin up a local ipfs daemon:
+   `ipfs daemon`
+  - Spin up the stitching server code:
+    `python index.py`
+  - Navigate to: http://localhost:3000/
+
+Made with ❤️️ by [Dipanwita Guhathakurta](https://github.com/susiejojo) as part of Ethereum India Fellowship 2.0.
 
 
 
