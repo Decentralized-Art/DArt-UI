@@ -23,8 +23,22 @@ In DArt, each team is allocated a canvas of size 2000* 1000. Various portions of
 
 ## Step3:
 
-**Draw!!!**🎨🎨🎨🎨🎨
+**Draw and Submit Pull Request!!!**🎨🎨🎨🎨🎨
 
 <img src="https://i.postimg.cc/1RJgLFKZ/ezgif-com-gif-maker.gif" height="500" width="2000">
+
+## Step4:
+
+**Owner Approves and Merges Pull Request**
+
+![approve.png](https://i.postimg.cc/63TsqFFc/approve.png)
+
+## Step5:
+
+**Create a MultiSig wallet for your team**
+
+Generate a secure unique MultiSig wallet address on Ethereum for you and your team for each art piece. *Requires gas fees*
+
+<img src="https://i.postimg.cc/G2bFjCbP/multisig.gif" height="500" width="2000">
 
 
