@@ -41,4 +41,21 @@ Generate a secure unique MultiSig wallet address on Ethereum for you and your te
 
 <img src="https://i.postimg.cc/G2bFjCbP/multisig.gif" height="500" width="2000">
 
+## Step6:
+
+**Sign and mint NFT**
+
+Currently DArt ERC-721 tokens for your Decentralized Art piece are available on Goerli and Matic Mumbai testnet. Own your art piece as a NFT!
+
+![image](https://user-images.githubusercontent.com/42820001/114281125-4167fc00-9a5a-11eb-8126-576a9a52ab6f.png)
+
+# 🚀 Technology Stack:
+  
+ - **Frontend**: <img src="https://img.shields.io/badge/react%20-%2320232a.svg?&style=for-the-badge&logo=react&logoColor=%2361DAFB"/><img src="https://img.shields.io/badge/material%20ui%20-%230081CB.svg?&style=for-the-badge&logo=material-ui&logoColor=white"/>
+ - **Image hosting**: <img src="https://upload.wikimedia.org/wikipedia/commons/c/c2/IPFS_logo.png" height="40" width="120">
+ - **Version control**: <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1bylakjJCguNV77wxjeG3TA_T1ntH0fqMFN8_CcvbAc5Wy4syAR56rxXc3sbYwNfXFg&usqp=CAU" height="25" width="100">
+ - **Login**: <img src="https://i.postimg.cc/CMGdN5dV/metamask.png" height="30" width="150">
+ - **Deployment (Mumbai testnet)**: <img src="https://i.postimg.cc/HkqVzy0d/matic2.png" height="30" width="110">
+
+
 
