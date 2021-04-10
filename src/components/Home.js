@@ -7,6 +7,7 @@ import { Typography } from "@material-ui/core";
 import backgroundH from "../assets/source.gif";
 import { MAIN_CONTRACT_ADDRESS } from "../infoNew";
 import { MAIN_CONTRACT_ABI } from "../Abi/ownerSig";
+import { MULTISIG_ABI, MULTISIG_BYTE } from "../Abi/MultiSig";
 import TextField from '@material-ui/core/TextField';
 import {Button, Dialog,DialogContent,DialogTitle} from "@material-ui/core";
 
@@ -43,6 +44,7 @@ const Home = () => {
   const [end,setEnd] = useState([2000,1000]);
   const [NFT,setNFT] = useState(null);
   const [NFTimg,setNFThash] = useState(null);
+  const [Multi,setMulti] = useState(null);
 
     return (
         <>
@@ -112,7 +114,7 @@ const Home = () => {
               const ceramic = new Ceramic(CERAMIC_URL);
               // Authenticate the Ceramic instance with the provider
             
-              await ceramic.setDIDProvider(didProvider);
+              await ceramic.setDIDProvider(didProvider); //kjzl6cwe1jw14bfuao7bsd0259gjtors3qcb65ptx20ecxgmug1qooij8iwd509
             
               // ceramic.close();
               console.log("Ceramic:",ceramic)
@@ -155,7 +157,7 @@ const Home = () => {
           }} onClick={() => setIsOpenUser(true)} size="large" variant="outlined" onClose={() => setIsOpenUser(false)}> <h3>Join your team</h3></Button>
           <Button
           style={{
-            position: "absolute", //kjzl6cwe1jw14aj92xx7u1rgsmr2r386iqjo481hcpycq3km2npr3hwcfj81jhn
+            position: "absolute", 
             left: '30%',
             top: '50%',
             backgroundColor: "black",
@@ -394,7 +396,7 @@ const Home = () => {
           </form>
           <Button
             style={{
-              left: '30%',
+              left: '0%',
               top: '20%',
               height: '40px',
               backgroundColor: "black",
@@ -403,22 +405,109 @@ const Home = () => {
               const addresses = await window.ethereum.enable();
               
               var res = {NFTimg};
-              console.log(res);
-              var imgHash = res["NFTimg"]["img"];
+              // console.log(res);
+              console.log(res["NFTimg"]["address1"],res["NFTimg"]["owner"])
+
+              let deploy_contract = new web3.eth.Contract(MULTISIG_ABI);
+              let payload = {
+                data: String(MULTISIG_BYTE.object),
+                arguments: [res["NFTimg"]["address1"],res["NFTimg"]["owner"]]
+              }
+              let parameter = {
+                from: addresses[0],
+                gas: web3.utils.toHex(800000),
+                gasPrice: web3.utils.toHex(web3.utils.toWei('30', 'gwei'))
+            }
+            if (res["NFTimg"]["owner"].toLowerCase()===addresses[0]) {
+              var tempC = await deploy_contract.deploy(payload).send(parameter, (err, transactionHash) => {
+                  console.log('Transaction Hash :', transactionHash);
+              }).on('confirmation', () => {}).then(async (newContractInstance) => {
+                  console.log('MultiSig Deployed Contract Address : ', newContractInstance.options.address);
+                  const addresses = await window.ethereum.enable();
+                  const authProvider = new EthereumAuthProvider(window.ethereum, addresses[0]);
+                  await threeIdConnect.connect(authProvider);
+                  const didProvider = await threeIdConnect.getDidProvider();
+                  
+                  const ceramic = new Ceramic(CERAMIC_URL);
+                
+                  await ceramic.setDIDProvider(didProvider);
+                
+                  const exis_doc = await ceramic.loadDocument(userHash);
+                  var res = exis_doc.content;
+                  await exis_doc.change({ content: { title: "New",
+                  img: res["img"],
+                  owner: res["owner"],
+                  address1: res["address1"],
+                  address2: res["address2"],
+                  add1Start: res["add1Start"],
+                  add1End: res["add1End"],
+                  add2Start: res["add2Start"],
+                  add2End: res["add2End"],
+                  commits: res["commits"],
+                  multihash: newContractInstance.options.address }})
+                  setMulti(newContractInstance.options.address);
+              })
+            }
+                   
+            }} size="large" variant="outlined"> <h4>Create MultiSig Wallet</h4></Button>
+            <Button
+            style={{
+              left: '5%',
+              height: '40px',
+              top: '20%',
+              backgroundColor: "black",
+              color: "white",
+            }} onClick={async () => {
+              const addresses = await window.ethereum.enable();
+              const authProvider = new EthereumAuthProvider(window.ethereum, addresses[0]);
+              await threeIdConnect.connect(authProvider);
+              const didProvider = await threeIdConnect.getDidProvider();
               
+              const ceramic = new Ceramic(CERAMIC_URL);
+            
+              await ceramic.setDIDProvider(didProvider);
+            
+              const exis_doc = await ceramic.loadDocument(userHash);
+              var res = exis_doc.content;
+              var imgHash = res["img"];
+              var acc = res["multihash"]
+              console.log("Multihash now:",res["multihash"]);
+              var MultiContract = new web3.eth.Contract(
+                MULTISIG_ABI,
+                "0xD8A11dBe4ee1beA06501f6dD60209F540fADfa65" //kjzl6cwe1jw148i80yvkjqz22cqqovn53qy89nqq0b9dwn40oa4r4b3x1pw8l5o
+              );
+              web3.eth.handleRevert = true;
+              var sign1 = null;
+              var sign2 = null;
+              await MultiContract.methods.owner1Sign().call(function(err, res){
+                sign1 = res;
+              });
+              await MultiContract.methods.owner2Sign().call(function(err, res){
+                sign2 = res;
+              });
+              console.log(sign1,sign2);
+              if (sign1 && sign2)
+              {
+              console.log("Hash now:",imgHash);
+              web3.eth.handleRevert = true;
               var mainContract = new web3.eth.Contract(
                 MAIN_CONTRACT_ABI,
                 MAIN_CONTRACT_ADDRESS //kjzl6cwe1jw148i80yvkjqz22cqqovn53qy89nqq0b9dwn40oa4r4b3x1pw8l5o
               );
-              if (res["NFTimg"]["owner"].toLowerCase()===addresses[0])
-              {
-              console.log("Hash now:",imgHash);
-              web3.eth.handleRevert = true;
               await mainContract.methods.awardItem(addresses[0],String(imgHash)).send({from:addresses[0],gas:8000000});
               console.log("NFT minted successfully!");
               console.log(mainContract.methods.balanceOf(addresses[0]).call());
               }
-            }} size="large" variant="outlined"> <h4>Mint</h4></Button>
+              else{
+              await MultiContract.methods.Sign().send({from:addresses[0],gas:8000000});
+              console.log("I've signed!!!");
+              }
+              
+              
+              
+            }} size="large" variant="outlined"> <h4>Sign and Mint</h4></Button>
+            <br></br><br></br>
+            {Multi!==false && <h3>MultiSig wallet address: {Multi}</h3>}
          
           </DialogContent>
           </Dialog>
