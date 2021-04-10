@@ -1,7 +1,6 @@
 import React from "react";
-import { Injected } from "../utils/web3-connectors";
-import { useWeb3React } from "@web3-react/core";
-import { AppBar, Grid, Typography, Button } from "@material-ui/core";
+
+import { AppBar, Grid, Typography} from "@material-ui/core";
 
 const styles = {
     appbar: {
@@ -13,7 +12,7 @@ const styles = {
   };
 
 const CanvasTitlebar = (props) => {
-    const { account, activate } = useWeb3React();
+    
     return (
       <AppBar position="static" style={styles.appbar}>
         <Grid container>

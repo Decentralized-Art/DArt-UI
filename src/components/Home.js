@@ -1,29 +1,29 @@
-import React, {useState, useEffect} from "react";
+import React, {useState} from "react";
 import { Link } from "react-router-dom";
 import Titlebar from "./Titlebar";
-import { ethers } from "ethers";
-import ipfs from "./ipfs";
-import { Typography } from "@material-ui/core";
+import Web3 from 'web3';
 import { useWeb3React } from "@web3-react/core";
+import { Typography } from "@material-ui/core";
 import backgroundH from "../assets/source.gif";
-import { MAIN_CONTRACT_ADDRESS } from "../info";
-import { MAIN_CONTRACT_ABI } from "../Abi/Main";
+import { MAIN_CONTRACT_ADDRESS } from "../infoNew";
+import { MAIN_CONTRACT_ABI } from "../Abi/ownerSig";
 import TextField from '@material-ui/core/TextField';
 import {Button, Dialog,DialogContent,DialogTitle} from "@material-ui/core";
 
 import { ThreeIdConnect, EthereumAuthProvider } from '3id-connect';
 
 const Ceramic = require("@ceramicnetwork/http-client").default;
-// const { Ed25519Provider } = require("key-did-provider-ed25519");
 const threeIdConnect = new ThreeIdConnect();
+const web3 = new Web3(window.ethereum);
 
 const CERAMIC_URL = "https://ceramic-clay.3boxlabs.com";
 
 const Home = () => {
   const { account, library } = useWeb3React();
+  
+  // const library = ethers.providers.getDefaultProvider();
   const [isOpenOwn, setIsOpenOwn] = useState(false);
   const [isOpenUser, setIsOpenUser] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(null);
   const [isImg, setImg] = useState(false);
   const [hash,setHash] = useState(false);
   const [userHash,setUserHash] = useState(false);
@@ -41,30 +41,9 @@ const Home = () => {
   const [editOwn,setEditOwn] = useState(null);
   const [start,setStart] = useState([0,0]);
   const [end,setEnd] = useState([2000,1000]);
-  const ceramic = null;
-  var mainContract = null;
+  const [NFT,setNFT] = useState(null);
+  const [NFTimg,setNFThash] = useState(null);
 
-
-
-  useEffect(() => {
-    const operation = async () => {
-      const signer = library.getSigner(account);
-      mainContract = new ethers.Contract(
-        MAIN_CONTRACT_ADDRESS,
-        MAIN_CONTRACT_ABI,
-        signer
-      );
-      const registrationStatus = await mainContract.isAddressRegistered(
-        account
-      );
-      if (registrationStatus) {
-        console.log(`${account} is registered`);
-      } else {
-        console.log(`${account} is not registred`);
-      }
-      setIsRegistered(registrationStatus);
-    }
-  },[account,isRegistered,library]);
     return (
         <>
           <Titlebar />
@@ -89,7 +68,7 @@ const Home = () => {
             position: "absolute",
             left: '20%',
             top: '30%',
-            backgroundColor: "black",
+            backgroundColor: "black", 
             color: "white",
           }} onClick={() => setIsOpenOwn(true)} size="large" variant="outlined"> <h3>Set up Canvas now!</h3></Button>
           <Dialog fullWidth={true} open={isOpenOwn} onClose={() => setIsOpenOwn(false)}>
@@ -137,53 +116,14 @@ const Home = () => {
             
               // ceramic.close();
               console.log("Ceramic:",ceramic)
-              const jsonSchema = {
-                "type": "object",
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "required": [
-                  "hash",
-                  "address1",
-                  "address2",
-                  "add1Start",
-                  "add1End",
-                  "add2Start",
-                  "add2End"
-                ],
-                "properties": {
-                  "hash": {
-                    "type": "string"
-                  },
-                  "address1": {
-                    "type": "string"
-                  },
-                  "address2":{
-                    "type": "String"
-                  },
-                  "add1Start":{
-                    "type" : "Array"
-                  },
-                  "add1End":{
-                    "type" : "Array"
-                  },
-                  "add2Start":{
-                    "type" : "Array"
-                  },
-                  "add2End":{
-                    "type" : "Array"
-                  }
-                },
-                "additionalProperties": false
-              };
-              console.log(ceramic.did.id); //0x07E032C79B7cb48dF619755426b13199FD5f8770 0xdbCBD17e4585CbC9A9d4e8a54951B428290B4b50
+              console.log(ceramic.did.id); //0x07E032C79B7cb48dF619755426b13199FD5f8770 0xe5958621C7e10ACbF2B7D09825d9F755A6D88Fe7 0xdbCBD17e4585CbC9A9d4e8a54951B428290B4b50
               console.log(user1,user2,user1From,user1To,user2From,user2To);
-              const schema_doc = await ceramic.createDocument('tile', { content: jsonSchema })
-              console.log(schema_doc);
               const new_doc = await ceramic.createDocument('tile',{
                 metadata: 
                   { controllers: [ceramic.did.id],
                   family: "doc family"},
                 content: {
-                  title: "Init",
+                  title: data["hash"],
                   img: data["hash"],
                   owner: addresses[0],
                   address1: user1,
@@ -215,12 +155,21 @@ const Home = () => {
           }} onClick={() => setIsOpenUser(true)} size="large" variant="outlined" onClose={() => setIsOpenUser(false)}> <h3>Join your team</h3></Button>
           <Button
           style={{
-            position: "absolute", //kjzl6cwe1jw148drw5xsg8wewqpsznsx0am4btu67rdvfxek67avfqoccmdgdhq
-            left: '40%',
+            position: "absolute", //kjzl6cwe1jw14aj92xx7u1rgsmr2r386iqjo481hcpycq3km2npr3hwcfj81jhn
+            left: '30%',
             top: '50%',
             backgroundColor: "black",
             color: "white",
           }} onClick={() => setImg(true)} size="large" variant="outlined" onClose={() => setImg(false)}> <h3>View Image</h3></Button>
+
+          <Button
+            style={{
+              left: '50%',
+              top: '31%',
+              backgroundColor: "black",
+              color: "white",
+            }} onClick={() => setNFT(true)} size="large" variant="outlined"> <h4>Mint NFT</h4>
+          </Button>
 
           <Button
             style={{
@@ -230,6 +179,8 @@ const Home = () => {
             backgroundColor: "black",
             color: "white",
           }} onClick={() => setIsOwn(true)} size="large" variant="outlined" onClose={() => setIsOwn(false)}> <h3>Approve changes(Owners only)</h3></Button>
+
+          
 
           <Dialog open={isOpenUser} onClose={() => setIsOpenUser(false)}>
           <DialogTitle>Add Ceramic hash:</DialogTitle>
@@ -415,6 +366,60 @@ const Home = () => {
             }} size="large" variant="outlined"> <h4>Approve</h4></Button>
           </div>}
           
+          </DialogContent>
+          </Dialog>
+
+        <Dialog open={NFT} onClose={() => setNFT(false)}>
+          <DialogTitle>Add Ceramic hash:</DialogTitle>
+          <DialogContent>
+          <form noValidate autoComplete="off">
+            Ceramic hash:<TextField onChange={async event => {
+              setUserHash(event.target.value);
+              var uhash = event.target.value;
+              const addresses = await window.ethereum.enable();
+              const authProvider = new EthereumAuthProvider(window.ethereum, addresses[0]);
+              await threeIdConnect.connect(authProvider);
+              const didProvider = await threeIdConnect.getDidProvider();
+              
+              const ceramic = new Ceramic(CERAMIC_URL);
+            
+              await ceramic.setDIDProvider(didProvider);
+            
+              const exis_doc = await ceramic.loadDocument(uhash);
+              var res = exis_doc.content;
+              console.log(res["img"])
+              setNFThash(res);
+              
+              }} id="outlined-basic" label="Hash" variant="outlined" size="small"/>
+          </form>
+          <Button
+            style={{
+              left: '30%',
+              top: '20%',
+              height: '40px',
+              backgroundColor: "black",
+              color: "white",
+            }} onClick={async () => {
+              const addresses = await window.ethereum.enable();
+              
+              var res = {NFTimg};
+              console.log(res);
+              var imgHash = res["NFTimg"]["img"];
+              
+              var mainContract = new web3.eth.Contract(
+                MAIN_CONTRACT_ABI,
+                MAIN_CONTRACT_ADDRESS //kjzl6cwe1jw148i80yvkjqz22cqqovn53qy89nqq0b9dwn40oa4r4b3x1pw8l5o
+              );
+              if (res["NFTimg"]["owner"].toLowerCase()===addresses[0])
+              {
+              console.log("Hash now:",imgHash);
+              web3.eth.handleRevert = true;
+              await mainContract.methods.awardItem(addresses[0],String(imgHash)).send({from:addresses[0],gas:8000000});
+              console.log("NFT minted successfully!");
+              console.log(mainContract.methods.balanceOf(addresses[0]).call());
+              }
+            }} size="large" variant="outlined"> <h4>Mint</h4></Button>
+         
           </DialogContent>
           </Dialog>
             

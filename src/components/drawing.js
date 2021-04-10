@@ -48,6 +48,7 @@ const Drawing =(props) => {
         await ceramic.setDIDProvider(didProvider);
         const exis_doc = await ceramic.loadDocument(props.drawingProps.location.canvasProps.hash);
         var res = exis_doc.content;
+        console.log("orig:",res["img"]);
         await fetch("http://127.0.0.1:5000/concat",{
               method: "POST",
               mode:"cors",
@@ -64,6 +65,7 @@ const Drawing =(props) => {
             }).then(data => data.json())
             .then(async data => {
               let commitList = res["commits"];
+              console.log("New:",data["hash"]);
               let newCommit = {
                 commit: data["hash"],
                 by: addresses[0]
